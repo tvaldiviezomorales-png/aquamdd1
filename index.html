@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AquaMDD — Filtrador de Agua · Madre de Dios</title>
+<link rel="stylesheet" href="styles.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <span class="logo-drop">💧</span>
+    <div><span class="logo-title">AquaMDD</span><span class="logo-sub">Madre de Dios</span></div>
+  </div>
+  <nav>
+    <a class="nav-link active" data-page="dashboard">📊 Dashboard</a>
+    <a class="nav-link" data-page="monitor">🔬 Monitor en Vivo</a>
+    <a class="nav-link" data-page="rios">🗺️ Ríos MDD</a>
+    <a class="nav-link" data-page="filtros">⚙️ Filtros</a>
+    <a class="nav-link" data-page="estadisticas">📈 Estadísticas</a>
+    <a class="nav-link" data-page="alertas">🚨 Alertas</a>
+  </nav>
+  <div class="sidebar-status"><span class="dot-green"></span> Sistema en línea</div>
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<main class="main" id="main">
+  <header class="topbar">
+    <button class="hamburger" id="hamburger">☰</button>
+    <div class="topbar-info">
+      <h1 id="pageTitle">Dashboard General</h1>
+      <span class="topbar-meta">Madre de Dios, Perú &nbsp;·&nbsp; <span id="clock"></span></span>
+    </div>
+    <div class="topbar-right">
+      <span class="badge green" id="sysStatus">● Sistema OK</span>
+      <button class="refresh-btn" id="refreshBtn" title="Actualizar">↻</button>
+    </div>
+  </header>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <section class="page active" id="page-dashboard">
+
+    <div class="kpi-row">
+      <div class="kpi ph"><div class="kpi-icon">🧪</div><div class="kpi-body"><span class="kpi-lbl">pH Promedio</span><span class="kpi-val" id="kpi-ph">7.2</span><span class="kpi-unit">pH</span></div><span class="kpi-trend up" id="tr-ph">▲ 0.1</span></div>
+      <div class="kpi tb"><div class="kpi-icon">🌊</div><div class="kpi-body"><span class="kpi-lbl">Turbidez</span><span class="kpi-val" id="kpi-tb">18.4</span><span class="kpi-unit">NTU</span></div><span class="kpi-trend dn" id="tr-tb">▼ 2.3</span></div>
+      <div class="kpi ox"><div class="kpi-icon">💨</div><div class="kpi-body"><span class="kpi-lbl">Oxígeno Disuelto</span><span class="kpi-val" id="kpi-ox">6.8</span><span class="kpi-unit">mg/L</span></div><span class="kpi-trend up" id="tr-ox">▲ 0.4</span></div>
+      <div class="kpi tp"><div class="kpi-icon">🌡️</div><div class="kpi-body"><span class="kpi-lbl">Temperatura</span><span class="kpi-val" id="kpi-tp">26.3</span><span class="kpi-unit">°C</span></div><span class="kpi-trend nt" id="tr-tp">— 0.0</span></div>
+      <div class="kpi cd"><div class="kpi-icon">⚡</div><div class="kpi-body"><span class="kpi-lbl">Conductividad</span><span class="kpi-val" id="kpi-cd">142</span><span class="kpi-unit">µS/cm</span></div><span class="kpi-trend up" id="tr-cd">▲ 5</span></div>
+      <div class="kpi cl"><div class="kpi-icon">🌿</div><div class="kpi-body"><span class="kpi-lbl">Clorofila</span><span class="kpi-val" id="kpi-cl">3.1</span><span class="kpi-unit">µg/L</span></div><span class="kpi-trend dn" id="tr-cl">▼ 0.2</span></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="card span2">
+        <div class="card-head">
+          <h3>pH en Tiempo Real — Últimas 24 horas</h3>
+          <div class="ph-legend"><span class="leg acid">Ácido &lt;6.5</span><span class="leg ok">Neutro 6.5–8.5</span><span class="leg base">Básico &gt;8.5</span></div>
+        </div>
+        <canvas id="cPH" height="90"></canvas>
+      </div>
+      <div class="card"><h3>Estado de Filtros</h3><canvas id="cFiltros" height="180"></canvas></div>
+    </div>
+
+    <div class="chart-row">
+      <div class="card"><h3>Turbidez por Río (NTU)</h3><canvas id="cTurb" height="180"></canvas></div>
+      <div class="card"><h3>Oxígeno Disuelto — 7 días</h3><canvas id="cOxy" height="180"></canvas></div>
+      <div class="card"><h3>Temperatura del Agua</h3><canvas id="cTemp" height="180"></canvas></div>
+    </div>
+
+    <div class="card full">
+      <div class="card-head">
+        <h3>Estado de Ríos Monitoreados — Madre de Dios</h3>
+        <span class="upd-lbl">Actualizado: <span id="lastUpd">hace 1 min</span></span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Río</th><th>Estación</th><th>pH</th><th>Turbidez (NTU)</th><th>O₂ (mg/L)</th><th>Temp (°C)</th><th>Cond. (µS/cm)</th><th>Filtro</th><th>Estado</th></tr></thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MONITOR EN VIVO ═══ -->
+  <section class="page" id="page-monitor">
+    <div class="monitor-wrap">
+
+      <div class="sonda-col">
+        <div class="sonda">
+          <div class="sonda-top"></div>
+          <div class="sonda-neck"></div>
+          <div class="sonda-pins">
+            <div class="pin" style="--d:0s">pH</div>
+            <div class="pin" style="--d:.3s">TRB</div>
+            <div class="pin" style="--d:.6s">O₂</div>
+            <div class="pin" style="--d:.9s">CON</div>
+            <div class="pin" style="--d:1.2s">CHL</div>
+          </div>
+          <div class="sonda-brush"></div>
+        </div>
+        <div class="water-glow"></div>
+        <p class="sonda-lbl">Sonda Multiparamétrica<br><small>Río Madre de Dios</small></p>
+      </div>
+
+      <div class="live-col">
+        <h2>Monitoreo en Tiempo Real</h2>
+        <p class="live-sub">Actualización automática cada 5 segundos</p>
+
+        <div class="gauges">
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 120 120" class="gauge-svg">
+              <circle cx="60" cy="60" r="50" class="g-bg"/>
+              <circle cx="60" cy="60" r="50" class="g-ring ph-ring" id="gPH"/>
+            </svg>
+            <div class="gauge-label"><span id="gPhV">7.2</span><small>pH</small></div>
+          </div>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 120 120" class="gauge-svg">
+              <circle cx="60" cy="60" r="50" class="g-bg"/>
+              <circle cx="60" cy="60" r="50" class="g-ring tb-ring" id="gTB"/>
+            </svg>
+            <div class="gauge-label"><span id="gTbV">18</span><small>NTU</small></div>
+          </div>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 120 120" class="gauge-svg">
+              <circle cx="60" cy="60" r="50" class="g-bg"/>
+              <circle cx="60" cy="60" r="50" class="g-ring ox-ring" id="gOX"/>
+            </svg>
+            <div class="gauge-label"><span id="gOxV">6.8</span><small>mg/L</small></div>
+          </div>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 120 120" class="gauge-svg">
+              <circle cx="60" cy="60" r="50" class="g-bg"/>
+              <circle cx="60" cy="60" r="50" class="g-ring tp-ring" id="gTP"/>
+            </svg>
+            <div class="gauge-label"><span id="gTpV">26°</span><small>Temp</small></div>
+          </div>
+        </div>
+
+        <canvas id="cLive" height="70"></canvas>
+
+        <div class="ph-scale-wrap">
+          <label>Escala de pH en tiempo real</label>
+          <div class="ph-scale">
+            <div class="ph-needle" id="phNeedle"></div>
+            <span class="sc-l">0 Ácido</span>
+            <span class="sc-r">14 Básico</span>
+          </div>
+          <p class="ph-now">pH actual: <strong id="phNow">7.2</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sensor-grid">
+      <div class="sensor-card"><h4>🧪 Sensor de pH</h4><p>Rango 0–14 · Precisión ±0.02</p><div class="sr good" id="srPH">7.2 — <b>ÓPTIMO</b></div><div class="mbar"><div class="mfill ph-f" id="mPH" style="width:51%"></div></div></div>
+      <div class="sensor-card"><h4>🌊 Turbidez</h4><p>Rango 0–1000 NTU · Precisión ±2%</p><div class="sr warn" id="srTB">18.4 NTU — <b>MODERADO</b></div><div class="mbar"><div class="mfill tb-f" id="mTB" style="width:18%"></div></div></div>
+      <div class="sensor-card"><h4>💨 Oxígeno Disuelto</h4><p>Rango 0–20 mg/L · Precisión ±0.1</p><div class="sr good" id="srOX">6.8 mg/L — <b>BUENO</b></div><div class="mbar"><div class="mfill ox-f" id="mOX" style="width:68%"></div></div></div>
+      <div class="sensor-card"><h4>🌡️ Temperatura</h4><p>Rango 0–50°C · Precisión ±0.1°C</p><div class="sr good" id="srTP">26.3°C — <b>NORMAL</b></div><div class="mbar"><div class="mfill tp-f" id="mTP" style="width:53%"></div></div></div>
+      <div class="sensor-card"><h4>⚡ Conductividad</h4><p>Rango 0–2000 µS/cm · Precisión ±1%</p><div class="sr good" id="srCD">142 µS/cm — <b>NORMAL</b></div><div class="mbar"><div class="mfill cd-f" id="mCD" style="width:7%"></div></div></div>
+      <div class="sensor-card"><h4>🌿 Clorofila</h4><p>Rango 0–400 µg/L · Precisión ±0.1</p><div class="sr good" id="srCL">3.1 µg/L — <b>BAJO</b></div><div class="mbar"><div class="mfill cl-f" id="mCL" style="width:1%"></div></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ RÍOS MDD ═══ -->
+  <section class="page" id="page-rios">
+    <div class="section-intro"><h2>Ríos Monitoreados — Región Madre de Dios</h2><p>Red de sondas multiparamétricas en los principales afluentes de la cuenca amazónica peruana.</p></div>
+    <div class="rios-grid" id="riosGrid"></div>
+  </section>
+
+  <!-- ═══ FILTROS ═══ -->
+  <section class="page" id="page-filtros">
+    <div class="section-intro"><h2>Sistema de Filtración de Agua</h2><p>Estado operativo de los filtros instalados en cada estación de monitoreo.</p></div>
+    <div class="filtros-grid" id="filtrosGrid"></div>
+    <div class="card full tech-box">
+      <h3>🔬 Tecnología de Filtración Empleada</h3>
+      <div class="tech-grid">
+        <div class="tech"><span>🪨</span><strong>Grava y Arena</strong><p>Retiene partículas gruesas y sedimentos. Primera etapa mecánica.</p></div>
+        <div class="tech"><span>🖤</span><strong>Carbón Activado</strong><p>Elimina orgánicos, cloro y metales pesados como mercurio (Hg) de ríos mineros.</p></div>
+        <div class="tech"><span>🧫</span><strong>Ultrafiltración</strong><p>Retiene bacterias, virus y patógenos. Poros de 0.01–0.1 µm.</p></div>
+        <div class="tech"><span>⚗️</span><strong>Corrector de pH</strong><p>Neutraliza acidez minera. Mantiene pH entre 6.5 y 8.5.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ESTADÍSTICAS ═══ -->
+  <section class="page" id="page-estadisticas">
+    <div class="stats-head">
+      <h2>Estadísticas Históricas</h2>
+      <div class="stats-controls">
+        <select id="selRio" class="sel"><option value="all">Todos los ríos</option><option value="mdd">Río Madre de Dios</option><option value="inambari">Río Inambari</option><option value="tambopata">Río Tambopata</option><option value="colorado">Río Colorado</option><option value="malinowski">Río Malinowski</option></select>
+        <select id="selPeriod" class="sel"><option value="7">Últimos 7 días</option><option value="30" selected>Últimos 30 días</option><option value="90">Últimos 90 días</option></select>
+      </div>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><h4>pH</h4><div class="sr-row"><span>Mínimo</span><b id="sPhMin">6.1</b></div><div class="sr-row"><span>Máximo</span><b id="sPhMax">8.3</b></div><div class="sr-row"><span>Promedio</span><b id="sPhAvg">7.2</b></div><div class="sr-row"><span>Desv. Est.</span><b id="sPhStd">0.42</b></div></div>
+      <div class="stat-card"><h4>Turbidez (NTU)</h4><div class="sr-row"><span>Mínimo</span><b id="sTbMin">4.2</b></div><div class="sr-row"><span>Máximo</span><b id="sTbMax">312</b></div><div class="sr-row"><span>Promedio</span><b id="sTbAvg">38.7</b></div><div class="sr-row"><span>Desv. Est.</span><b id="sTbStd">52.1</b></div></div>
+      <div class="stat-card"><h4>Oxígeno (mg/L)</h4><div class="sr-row"><span>Mínimo</span><b id="sOxMin">4.8</b></div><div class="sr-row"><span>Máximo</span><b id="sOxMax">9.2</b></div><div class="sr-row"><span>Promedio</span><b id="sOxAvg">6.9</b></div><div class="sr-row"><span>Desv. Est.</span><b id="sOxStd">0.88</b></div></div>
+      <div class="stat-card"><h4>Temperatura (°C)</h4><div class="sr-row"><span>Mínimo</span><b id="sTpMin">22.1</b></div><div class="sr-row"><span>Máximo</span><b id="sTpMax">31.4</b></div><div class="sr-row"><span>Promedio</span><b id="sTpAvg">26.8</b></div><div class="sr-row"><span>Desv. Est.</span><b id="sTpStd">1.9</b></div></div>
+    </div>
+    <div class="chart-row"><div class="card span2"><h3>Evolución de pH — 30 días</h3><canvas id="cStatPH" height="90"></canvas></div></div>
+    <div class="chart-row">
+      <div class="card"><h3>Distribución de Calidad</h3><canvas id="cCalidad" height="200"></canvas></div>
+      <div class="card"><h3>Turbidez Mensual por Río</h3><canvas id="cTurbM" height="200"></canvas></div>
+    </div>
+    <div class="card full">
+      <h3>📋 Cumplimiento ECA-Agua (Perú)</h3>
+      <div class="comply-grid" id="complyGrid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ ALERTAS ═══ -->
+  <section class="page" id="page-alertas">
+    <div class="alertas-head">
+      <h2>Centro de Alertas</h2>
+      <div class="alert-counts">
+        <span class="ac red" id="acCrit">2 Críticas</span>
+        <span class="ac yellow" id="acWarn">5 Advertencias</span>
+        <span class="ac blue" id="acInfo">8 Informativas</span>
+      </div>
+    </div>
+    <div id="alertList"></div>
+  </section>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>
